@@ -275,11 +275,11 @@ export default function ProjectDetail() {
             </svg>
           </button>
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 400, color: '#e8eaed', margin: 0 }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 400, color: 'var(--color-text-primary)', margin: 0 }}>
               {project?.name || 'Carregando...'}
             </h1>
             {project?.description && (
-              <p style={{ fontSize: '13px', color: '#9aa0a6', margin: '4px 0 0' }}>{project.description}</p>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '4px 0 0' }}>{project.description}</p>
             )}
           </div>
           <button onClick={() => { setEditingTask(null); setTitle(''); setDescription(''); setDueDate(''); setStatus(statusFilter || 'pendente'); setShowForm(true); }} className="btn-primary">
@@ -302,7 +302,7 @@ export default function ProjectDetail() {
                 cursor: 'pointer',
                 border: statusFilter === s ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
                 background: statusFilter === s ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                color: statusFilter === s ? 'var(--color-primary)' : '#9aa0a6',
+                color: statusFilter === s ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                 fontWeight: statusFilter === s ? 500 : 400,
               }}
             >

@@ -4,11 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Color system - dark background with white cards */
+  /* Color system - white/light background */
   --color-primary: #4285f4;
   --color-primary-hover: #5a95f5;
   --color-primary-light: rgba(66, 133, 244, 0.08);
-  --color-background: #1a1a2e;
+  --color-background: #ffffff;
   --color-surface: #ffffff;
   --color-surface-elevated: #f8f9fa;
   --color-text-primary: #202124;
@@ -33,8 +33,8 @@
 }
 
 @theme inline {
-  --color-background: #1a1a2e;
-  --color-foreground: #e8eaed;
+  --color-background: #ffffff;
+  --color-foreground: #202124;
   --font-sans: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -43,13 +43,8 @@
 }
 
 body {
-  background-color: #0f0f1a;
-  background-image:
-    radial-gradient(ellipse at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-    radial-gradient(ellipse at 90% 10%, rgba(236, 72, 153, 0.12) 0%, transparent 35%),
-    radial-gradient(ellipse at 50% 80%, rgba(6, 182, 212, 0.10) 0%, transparent 45%),
-    radial-gradient(ellipse at 80% 60%, rgba(168, 85, 247, 0.08) 0%, transparent 30%),
-    radial-gradient(circle at 30% 70%, rgba(34, 197, 94, 0.06) 0%, transparent 25%);
+  background-color: #f8f9fa;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   color: var(--color-text-primary);
   font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
