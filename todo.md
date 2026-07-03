@@ -33,7 +33,8 @@
 - [x] Update App.tsx routes for /auth/login and /auth/register
 - [x] Fix: Register should redirect to Login page with email/password prefilled
 - [x] Fix: Login not working - fixed trust proxy for cookie secure flag
-- [ ] Push fixes to GitHub
+- [x] Push fixes to GitHub
 - [x] Change theme to dark mode
 - [x] Fix: Login still not redirecting to home after successful login (invalidate auth.me cache)
 - [x] Fix: Surface/card color should be white (light), only background is dark
+- [x] Fix: Infinite loading spinner on Home page (removed isFetching from loading state)
