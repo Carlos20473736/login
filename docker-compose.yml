@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: minitracker-db
+    network_mode: host
+    environment:
+      POSTGRES_USER: minitracker
+      POSTGRES_PASSWORD: minitracker123
+      POSTGRES_DB: minitracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U minitracker']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: minitracker-api
+    network_mode: host
+    environment:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: minitracker
+      DB_PASSWORD: minitracker123
+      DB_DATABASE: minitracker
+      JWT_SECRET: minha-chave-secreta-dev
+      JWT_EXPIRES_IN: 1h
+      APP_PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+    container_name: minitracker-frontend
+    network_mode: host
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      PORT: 3001
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
