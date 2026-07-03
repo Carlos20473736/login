@@ -38,8 +38,11 @@ export default function LoginPage() {
     if (paramPassword) setPassword(paramPassword);
   }, []);
 
+  const utils = trpc.useUtils();
   const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Prime the auth cache with the user data so Home doesn't see stale null
+      await utils.auth.me.refetch();
       setLocation('/');
     },
     onError: (err) => {

@@ -35,3 +35,5 @@
 - [x] Fix: Login not working - fixed trust proxy for cookie secure flag
 - [ ] Push fixes to GitHub
 - [x] Change theme to dark mode
+- [x] Fix: Login still not redirecting to home after successful login (invalidate auth.me cache)
+- [x] Fix: Surface/card color should be white (light), only background is dark

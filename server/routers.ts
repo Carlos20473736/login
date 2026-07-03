@@ -49,7 +49,7 @@ export const appRouter = router({
         });
         if (!user) throw new Error("Erro ao criar usuário");
         // Set session cookie
-        const token = await sdk.createSessionToken(user.openId);
+        const token = await sdk.createSessionToken(user.openId, { name: user.name || input.name || 'User' });
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
         return { success: true, user: { id: user.id, name: user.name, email: user.email } };
@@ -69,7 +69,7 @@ export const appRouter = router({
           throw new Error("E-mail ou senha incorretos");
         }
         // Set session cookie
-        const token = await sdk.createSessionToken(user.openId);
+        const token = await sdk.createSessionToken(user.openId, { name: user.name || user.email || 'User' });
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
         return { success: true, user: { id: user.id, name: user.name, email: user.email } };

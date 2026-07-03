@@ -213,7 +213,7 @@ export default function Home() {
       {/* Main content */}
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 400, color: 'var(--color-text-primary)', margin: 0 }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 400, color: '#e8eaed', margin: 0 }}>
             Meus Projetos
           </h1>
           <button onClick={() => setShowForm(true)} className="btn-primary">
@@ -257,7 +257,7 @@ export default function Home() {
                         {project.description}
                       </p>
                     )}
-                    <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', margin: 0 }}>
+                    <p style={{ fontSize: '12px', color: '#80868b', margin: 0 }}>
                       {new Date(project.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
