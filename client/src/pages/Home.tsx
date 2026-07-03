@@ -1,316 +1,279 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Header } from "@/components/Header";
+import { Toast } from "@/components/Toast";
 import { trpc } from "@/lib/trpc";
-import {
-  FolderKanban,
-  Plus,
-  ClipboardList,
-  Clock,
-  CheckCircle2,
-  Loader2,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from "lucide-react";
-import { useState } from "react";
+import { getLoginUrl } from "@/const";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editProject, setEditProject] = useState<{ id: number; name: string; description: string | null } | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
+  const [skipConfirmation, setSkipConfirmation] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('skipDeleteConfirmation');
+    if (stored === 'true') setSkipConfirmation(true);
+  }, []);
 
   const utils = trpc.useUtils();
   const projectsQuery = trpc.projects.list.useQuery(undefined, { enabled: !!user });
-  const statsQuery = trpc.projects.stats.useQuery(undefined, { enabled: !!user });
 
   const createMutation = trpc.projects.create.useMutation({
     onSuccess: () => {
       utils.projects.list.invalidate();
-      utils.projects.stats.invalidate();
-      setCreateOpen(false);
-      setName("");
-      setDescription("");
-      toast.success("Projeto criado com sucesso");
+      setNewName('');
+      setNewDescription('');
+      setShowForm(false);
+      setToast({ message: 'Projeto criado com sucesso!', type: 'success' });
     },
-    onError: () => toast.error("Erro ao criar projeto"),
-  });
-
-  const updateMutation = trpc.projects.update.useMutation({
-    onSuccess: () => {
-      utils.projects.list.invalidate();
-      setEditOpen(false);
-      setEditProject(null);
-      toast.success("Projeto atualizado");
+    onError: () => {
+      setToast({ message: 'Erro ao criar projeto', type: 'error' });
     },
-    onError: () => toast.error("Erro ao atualizar projeto"),
   });
 
   const deleteMutation = trpc.projects.delete.useMutation({
     onSuccess: () => {
       utils.projects.list.invalidate();
-      utils.projects.stats.invalidate();
-      toast.success("Projeto excluído");
+      setToast({ message: 'Projeto excluído com sucesso!', type: 'success' });
     },
-    onError: () => toast.error("Erro ao excluir projeto"),
+    onError: () => {
+      setToast({ message: 'Erro ao excluir projeto', type: 'error' });
+    },
   });
 
-  const handleCreate = () => {
-    if (!name.trim()) return;
-    createMutation.mutate({ name: name.trim(), description: description.trim() || null });
+  // Redirect to login if not authenticated
+  if (!loading && !user) {
+    window.location.href = getLoginUrl();
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid var(--color-border)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+      </div>
+    );
+  }
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    createMutation.mutate({ name: newName.trim(), description: newDescription.trim() || null });
   };
 
-  const handleUpdate = () => {
-    if (!editProject || !name.trim()) return;
-    updateMutation.mutate({ id: editProject.id, name: name.trim(), description: description.trim() || null });
+  const requestDelete = (id: number, name: string) => {
+    if (skipConfirmation) {
+      deleteMutation.mutate({ id });
+    } else {
+      setDeleteTarget({ id, name });
+    }
   };
 
-  const openEdit = (project: { id: number; name: string; description: string | null }) => {
-    setEditProject(project);
-    setName(project.name);
-    setDescription(project.description || "");
-    setEditOpen(true);
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    if (dontAskAgain) {
+      localStorage.setItem('skipDeleteConfirmation', 'true');
+      setSkipConfirmation(true);
+    }
+    deleteMutation.mutate({ id: deleteTarget.id });
+    setDeleteTarget(null);
+    setDontAskAgain(false);
   };
 
-  const stats = statsQuery.data;
+  const cancelDelete = () => {
+    setDeleteTarget(null);
+    setDontAskAgain(false);
+  };
+
+  const projects = projectsQuery.data || [];
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Projetos</h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie seus projetos e acompanhe o progresso das tarefas.
+    <div style={{ minHeight: '100vh' }}>
+      <Header />
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1100, padding: '24px',
+          }}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: '420px',
+              background: 'var(--color-surface)', borderRadius: '16px',
+              padding: '28px 32px', boxShadow: '0 24px 48px rgba(0, 0, 0, 0.2)',
+              animation: 'fadeIn 0.2s ease',
+            }}
+          >
+            <h3 style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-text-primary)', margin: '0 0 16px' }}>
+              Excluir projeto
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Tem certeza que deseja excluir o projeto <strong style={{ color: 'var(--color-text-primary)' }}>&ldquo;{deleteTarget.name}&rdquo;</strong>?
+              Esta ação não pode ser desfeita e todas as tarefas associadas serão removidas.
             </p>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-secondary)', cursor: 'pointer', marginBottom: '24px', userSelect: 'none' }}>
+              <input type="checkbox" checked={dontAskAgain} onChange={(e) => setDontAskAgain(e.target.checked)} style={{ width: '16px', height: '16px', borderRadius: '3px', cursor: 'pointer', accentColor: 'var(--color-primary)' }} />
+              Não perguntar novamente
+            </label>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button onClick={cancelDelete} className="btn-secondary">Cancelar</button>
+              <button
+                onClick={confirmDelete}
+                className="btn-secondary"
+                style={{ color: '#d93025', borderColor: '#d93025' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#fce8e6'; e.currentTarget.style.borderColor = '#fce8e6'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#d93025'; }}
+              >
+                Excluir
+              </button>
+            </div>
           </div>
-          <Button onClick={() => { setName(""); setDescription(""); setCreateOpen(true); }} className="gap-2 shadow-sm">
-            <Plus className="h-4 w-4" />
-            Novo Projeto
-          </Button>
+        </div>
+      )}
+
+      {/* Create project modal */}
+      {showForm && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '24px',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: '480px',
+              background: 'var(--color-surface)', borderRadius: '16px',
+              padding: '32px', boxShadow: '0 24px 48px rgba(0, 0, 0, 0.2)',
+              animation: 'fadeIn 0.2s ease',
+            }}
+          >
+            <h2 style={{ fontSize: '18px', fontWeight: 500, color: 'var(--color-text-primary)', margin: '0 0 24px' }}>
+              Novo projeto
+            </h2>
+            <form onSubmit={handleCreate}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px', letterSpacing: '0.4px' }}>
+                  Nome do projeto
+                </label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="input-field"
+                  placeholder="Ex: Website Redesign"
+                  autoFocus
+                />
+              </div>
+              <div style={{ marginBottom: '28px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '6px', letterSpacing: '0.4px' }}>
+                  Descrição (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  className="input-field"
+                  placeholder="Uma breve descrição do projeto"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancelar</button>
+                <button type="submit" disabled={!newName.trim() || createMutation.isPending} className="btn-primary">
+                  {createMutation.isPending ? (
+                    <span style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite', display: 'inline-block' }} />
+                  ) : 'Criar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 400, color: 'var(--color-text-primary)', margin: 0 }}>
+            Meus Projetos
+          </h1>
+          <button onClick={() => setShowForm(true)} className="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Novo projeto
+          </button>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-0 shadow-sm bg-card">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FolderKanban className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{stats.totalProjects}</p>
-                    <p className="text-xs text-muted-foreground">Projetos</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-0 shadow-sm bg-card">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{stats.pendingTasks}</p>
-                    <p className="text-xs text-muted-foreground">Pendentes</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-0 shadow-sm bg-card">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <ClipboardList className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{stats.inProgressTasks}</p>
-                    <p className="text-xs text-muted-foreground">Em Andamento</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-0 shadow-sm bg-card">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{stats.completedTasks}</p>
-                    <p className="text-xs text-muted-foreground">Concluídas</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Projects List */}
         {projectsQuery.isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: '32px', height: '32px', border: '3px solid var(--color-border)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
           </div>
-        ) : projectsQuery.data?.length === 0 ? (
-          <Card className="border-dashed border-2 shadow-none">
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
-                <FolderKanban className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium mb-1">Nenhum projeto ainda</h3>
-              <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                Crie seu primeiro projeto para começar a organizar suas tarefas.
-              </p>
-              <Button onClick={() => { setName(""); setDescription(""); setCreateOpen(true); }} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Criar Projeto
-              </Button>
-            </CardContent>
-          </Card>
+        ) : projects.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 24px', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
+              Nenhum projeto ainda
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', margin: 0 }}>
+              Crie seu primeiro projeto para começar a organizar suas tarefas.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projectsQuery.data?.map((project) => (
-              <Card
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {projects.map((project) => (
+              <div
                 key={project.id}
-                className="group border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                className="card"
+                style={{ padding: '24px 32px', cursor: 'pointer', position: 'relative', borderRadius: '12px' }}
                 onClick={() => setLocation(`/projects/${project.id}`)}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FolderKanban className="h-4.5 w-4.5 text-primary" />
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <button className="h-8 w-8 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent transition-all">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => openEdit(project)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => deleteMutation.mutate({ id: project.id })}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {project.name}
+                    </h3>
+                    {project.description && (
+                      <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 12px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        {project.description}
+                      </p>
+                    )}
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', margin: 0 }}>
+                      {new Date(project.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </p>
                   </div>
-                  <h3 className="font-medium text-base mb-1 truncate">{project.name}</h3>
-                  {project.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Atualizado em {new Date(project.updatedAt).toLocaleDateString("pt-BR")}
-                  </p>
-                </CardContent>
-              </Card>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); requestDelete(project.id, project.name); }}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', transition: 'background 0.15s, color 0.15s', flexShrink: 0 }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-error-bg)'; e.currentTarget.style.color = 'var(--color-error)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-tertiary)'; }}
+                    title="Excluir projeto"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Create Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Novo Projeto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome</label>
-              <Input
-                placeholder="Nome do projeto"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição</label>
-              <Textarea
-                placeholder="Descrição opcional"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreate} disabled={!name.trim() || createMutation.isPending}>
-              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Criar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar Projeto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome</label>
-              <Input
-                placeholder="Nome do projeto"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição</label>
-              <Textarea
-                placeholder="Descrição opcional"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
-            <Button onClick={handleUpdate} disabled={!name.trim() || updateMutation.isPending}>
-              {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
+      </main>
+    </div>
   );
 }

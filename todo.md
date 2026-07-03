@@ -5,9 +5,9 @@
 - [x] Backend: tRPC router for projects CRUD (list, create, update, delete) with user isolation
 - [x] Backend: tRPC router for tasks CRUD (list, create, update, delete, updateStatus) with user isolation
 - [x] Backend: Task filtering by status (pendente, em_andamento, concluida)
-- [x] Frontend: Elegant theme with premium typography and spacing
-- [x] Frontend: DashboardLayout with sidebar navigation showing projects list
-- [x] Frontend: Dashboard home page with projects overview and stats
+- [x] Frontend: Google-style design with original CSS variables and typography
+- [x] Frontend: Header component with user menu (original design)
+- [x] Frontend: Dashboard home page with projects list (original design)
 - [x] Frontend: Project creation dialog
 - [x] Frontend: Project editing and deletion
 - [x] Frontend: Project detail page with tasks list
@@ -20,5 +20,6 @@
 - [x] Data isolation: All queries filtered by authenticated user ID
 - [x] Vitest tests for backend procedures
 - [x] Backend: Validate project ownership before creating a task
-- [x] Frontend: Render user's projects in the sidebar navigation
+- [x] Frontend: Toast component (original design)
+- [x] Frontend: Ported all original UI logic (modals, confirmations, skip-confirmation)
 - [x] Backend: Add test covering unauthorized cross-project task creation
