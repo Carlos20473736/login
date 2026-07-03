@@ -89,6 +89,31 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+// ========== AUTH ==========
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createUserWithPassword(data: { name: string; email: string; passwordHash: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const { nanoid } = await import('nanoid');
+  const openId = `local_${nanoid(16)}`;
+  await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    passwordHash: data.passwordHash,
+    loginMethod: 'email',
+  });
+  const result = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 // ========== PROJECTS ==========
 
 export async function getProjectsByUserId(userId: number) {

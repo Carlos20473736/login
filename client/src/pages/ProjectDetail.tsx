@@ -2,8 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Toast } from "@/components/Toast";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 
 type TaskStatus = 'pendente' | 'em_andamento' | 'concluida';
@@ -76,8 +75,13 @@ export default function ProjectDetail() {
     onError: () => setToast({ message: 'Erro ao excluir', type: 'error' }),
   });
 
+  useEffect(() => {
+    if (!loading && !user) {
+      setLocation('/auth/login');
+    }
+  }, [loading, user, setLocation]);
+
   if (!loading && !user) {
-    window.location.href = getLoginUrl();
     return null;
   }
 

@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Toast } from "@/components/Toast";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
@@ -49,8 +49,13 @@ export default function Home() {
   });
 
   // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      setLocation('/auth/login');
+    }
+  }, [loading, user, setLocation]);
+
   if (!loading && !user) {
-    window.location.href = getLoginUrl();
     return null;
   }
 

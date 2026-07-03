@@ -15,7 +15,11 @@ import {
   updateTask,
   deleteTask,
   getProjectStats,
+  getUserByEmail,
+  createUserWithPassword,
 } from "./db";
+import bcrypt from "bcryptjs";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
   system: systemRouter,
@@ -24,10 +28,52 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
+    register: publicProcedure
+      .input(z.object({
+        name: z.string().min(1).max(100),
+        email: z.string().email().max(320),
+        password: z.string().min(6).max(128),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getUserByEmail(input.email);
+        if (existing) {
+          throw new Error("E-mail já cadastrado");
+        }
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        const user = await createUserWithPassword({
+          name: input.name,
+          email: input.email,
+          passwordHash,
+        });
+        if (!user) throw new Error("Erro ao criar usuário");
+        // Set session cookie
+        const token = await sdk.createSessionToken(user.openId);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+        return { success: true, user: { id: user.id, name: user.name, email: user.email } };
+      }),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await getUserByEmail(input.email);
+        if (!user || !user.passwordHash) {
+          throw new Error("E-mail ou senha incorretos");
+        }
+        const valid = await bcrypt.compare(input.password, user.passwordHash);
+        if (!valid) {
+          throw new Error("E-mail ou senha incorretos");
+        }
+        // Set session cookie
+        const token = await sdk.createSessionToken(user.openId);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+        return { success: true, user: { id: user.id, name: user.name, email: user.email } };
+      }),
   }),
 
   projects: router({

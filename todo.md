@@ -23,3 +23,11 @@
 - [x] Frontend: Toast component (original design)
 - [x] Frontend: Ported all original UI logic (modals, confirmations, skip-confirmation)
 - [x] Backend: Add test covering unauthorized cross-project task creation
+- [x] Remove Manus OAuth login flow
+- [x] Add email/password registration endpoint (backend)
+- [x] Add email/password login endpoint (backend)
+- [x] Add password hashing with bcrypt
+- [x] Create Login page with original Google-style design
+- [x] Create Register page with original Google-style design
+- [x] Update frontend auth flow to use email/password instead of OAuth
+- [x] Update App.tsx routes for /auth/login and /auth/register
