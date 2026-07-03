@@ -58,6 +58,7 @@ export const appRouter = router({
       .input(z.object({
         email: z.string().email(),
         password: z.string().min(1),
+        keepLoggedIn: z.boolean().optional().default(false),
       }))
       .mutation(async ({ ctx, input }) => {
         const user = await getUserByEmail(input.email);
@@ -71,7 +72,9 @@ export const appRouter = router({
         // Set session cookie
         const token = await sdk.createSessionToken(user.openId, { name: user.name || user.email || 'User' });
         const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+        // If keepLoggedIn, set cookie to expire in 30 days; otherwise session cookie
+        const maxAge = input.keepLoggedIn ? 30 * 24 * 60 * 60 * 1000 : undefined;
+        ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, ...(maxAge ? { maxAge } : {}) });
         return { success: true, user: { id: user.id, name: user.name, email: user.email } };
       }),
   }),

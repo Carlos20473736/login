@@ -32,8 +32,8 @@ export default function RegisterPage() {
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: () => {
-      // Redirect to login page with email prefilled
-      setLocation(`/auth/login?email=${encodeURIComponent(email)}`);
+      // Redirect to login page with email and password prefilled
+      setLocation(`/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
     },
     onError: (err) => {
       setError(err.message || 'Erro ao criar conta');
