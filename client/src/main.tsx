@@ -17,7 +17,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  // Redirect to local login page instead of Manus OAuth
+  // Redirect to login page
   if (window.location.pathname !== '/auth/login' && window.location.pathname !== '/auth/register') {
     window.location.href = '/auth/login';
   }

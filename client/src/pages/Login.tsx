@@ -76,13 +76,7 @@ export default function LoginPage() {
           padding: '48px 40px',
         }}
       >
-        {/* Title */}
-        <h1 style={{ fontSize: '22px', fontWeight: 400, color: 'var(--color-text-primary)', margin: '0 0 8px', textAlign: 'center' }}>
-          Entrar
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', margin: '0 0 32px', textAlign: 'center' }}>
-          Acesse o Painel Administrativo
-        </p>
+
 
         {/* Error */}
         {error && (
