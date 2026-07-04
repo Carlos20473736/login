@@ -1,0 +1,8 @@
+[build]
+  base = "frontend"
+  command = "pnpm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_PUBLIC_API_URL = ""
