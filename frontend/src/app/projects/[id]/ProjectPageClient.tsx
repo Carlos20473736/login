@@ -642,10 +642,10 @@ export default function ProjectPageClient() {
                 onClick={confirmDeleteTask}
                 className="btn-secondary"
                 style={{
-                  color: '#d93025',
-                  borderColor: '#d93025',
+                  color: 'var(--color-error)',
+                  borderColor: 'var(--color-error)',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#fce8e6'; e.currentTarget.style.borderColor = '#fce8e6'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-error-bg)'; e.currentTarget.style.borderColor = 'var(--color-error-bg)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#d93025'; }}
               >
                 Excluir

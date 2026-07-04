@@ -79,7 +79,7 @@ export default function RegisterPage() {
           <div
             style={{
               background: 'var(--color-error-bg)',
-              border: '1px solid #f5c6cb',
+              border: '1px solid var(--color-error)',
               borderRadius: '8px',
               padding: '12px 16px',
               marginBottom: '24px',
