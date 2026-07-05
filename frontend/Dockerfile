@@ -1,19 +1,43 @@
-FROM node:22-alpine
+FROM node:22-alpine AS base
 
+# Instalar pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Etapa de dependências
+FROM base AS deps
 WORKDIR /app
-
-RUN npm install -g pnpm@9.15.0
-
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile
 
+# Etapa de build
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:3000
+ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-RUN npm run build
+RUN pnpm run build
 
-EXPOSE 3001
+# Etapa de produção
+FROM base AS runner
+WORKDIR /app
 
-CMD ["npm", "start"]
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/frontend ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
