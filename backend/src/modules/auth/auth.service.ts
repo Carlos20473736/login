@@ -9,7 +9,6 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -87,11 +86,11 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_SECRET', 'default-secret'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '15m'),
+      expiresIn: '15m',
     });
 
     const refreshToken = this.jwtService.sign(
-      { sub: userId, email, type: 'refresh' },
+      { sub: userId, email, type: 'refresh' } as any,
       {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
         expiresIn: '7d',
