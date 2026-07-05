@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: minitracker-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: minitracker-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: minitracker-db
+    databaseName: minitracker
+    user: minitracker
