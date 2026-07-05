@@ -170,7 +170,7 @@ export default function DashboardPage() {
                   borderColor: 'var(--color-error)',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-error-bg)'; e.currentTarget.style.borderColor = 'var(--color-error-bg)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#d93025'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--color-error)'; }}
               >
                 Excluir
               </button>

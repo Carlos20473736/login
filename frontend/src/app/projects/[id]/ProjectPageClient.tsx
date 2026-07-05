@@ -206,9 +206,9 @@ export default function ProjectPageClient() {
               const isActive = statusFilter === f.value;
               const chipColors: Record<string, { bg: string; border: string; color: string; activeBg: string; activeBorder: string; activeColor: string }> = {
                 '': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: 'var(--color-primary-light)', activeBorder: 'var(--color-primary)', activeColor: 'var(--color-primary)' },
-                'pendente': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: '#fef7e0', activeBorder: '#f9ab00', activeColor: '#e37400' },
-                'em_andamento': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: '#e8f0fe', activeBorder: '#1a73e8', activeColor: '#1a73e8' },
-                'concluida': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: '#e6f4ea', activeBorder: '#1e8e3e', activeColor: '#1e8e3e' },
+                'pendente': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: 'var(--color-warning-bg)', activeBorder: 'var(--color-warning)', activeColor: 'var(--color-warning)' },
+                'em_andamento': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: 'var(--color-info-bg)', activeBorder: 'var(--color-info)', activeColor: 'var(--color-info)' },
+                'concluida': { bg: 'var(--color-surface)', border: 'var(--color-border)', color: 'var(--color-text-secondary)', activeBg: 'var(--color-success-bg)', activeBorder: 'var(--color-success)', activeColor: 'var(--color-success)' },
               };
               const c = chipColors[f.value] || chipColors[''];
               return (
@@ -390,21 +390,21 @@ export default function ProjectPageClient() {
                       borderRadius: '16px',
                       border: `1.5px solid ${
                         task.status === 'concluida'
-                          ? '#34a853'
+                          ? 'var(--color-success)'
                           : task.status === 'em_andamento'
-                          ? '#4285f4'
-                          : '#f9ab00'
+                          ? 'var(--color-info)'
+                          : 'var(--color-warning)'
                       }`,
                       background: task.status === 'concluida'
-                        ? '#e6f4ea'
+                        ? 'var(--color-success-bg)'
                         : task.status === 'em_andamento'
-                        ? '#e8f0fe'
-                        : '#fef7e0',
+                        ? 'var(--color-info-bg)'
+                        : 'var(--color-warning-bg)',
                       color: task.status === 'concluida'
-                        ? '#1e7e34'
+                        ? 'var(--color-success)'
                         : task.status === 'em_andamento'
-                        ? '#1a73e8'
-                        : '#e37400',
+                        ? 'var(--color-info)'
+                        : 'var(--color-warning)',
                       cursor: 'pointer',
                       outline: 'none',
                       minWidth: '125px',
@@ -432,10 +432,10 @@ export default function ProjectPageClient() {
                       transform: 'translateY(-50%)',
                       pointerEvents: 'none',
                       color: task.status === 'concluida'
-                        ? '#1e7e34'
+                        ? 'var(--color-success)'
                         : task.status === 'em_andamento'
-                        ? '#1a73e8'
-                        : '#e37400',
+                        ? 'var(--color-info)'
+                        : 'var(--color-warning)',
                     }}
                   >
                     <polyline points="6 9 12 15 18 9" />
@@ -646,7 +646,7 @@ export default function ProjectPageClient() {
                   borderColor: 'var(--color-error)',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-error-bg)'; e.currentTarget.style.borderColor = 'var(--color-error-bg)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#d93025'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--color-error)'; }}
               >
                 Excluir
               </button>
