@@ -22,4 +22,12 @@ export class UsersService {
     const user = this.usersRepository.create(data);
     return this.usersRepository.save(user);
   }
+
+  async updateRefreshToken(userId: string, refreshToken: string | null): Promise<void> {
+    await this.usersRepository.update(userId, { refreshToken });
+  }
+
+  async findByRefreshToken(userId: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id: userId } });
+  }
 }

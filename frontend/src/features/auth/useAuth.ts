@@ -16,6 +16,11 @@ interface RegisterData {
   password: string;
 }
 
+interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
 export function useAuth() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -33,7 +38,7 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const { data } = await api.post<ApiResponse<{ access_token: string }>>(
+      const { data } = await api.post<ApiResponse<LoginResponse>>(
         '/auth/login',
         credentials,
       );
@@ -41,6 +46,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       router.push('/dashboard');
     },
@@ -59,8 +65,14 @@ export function useAuth() {
     },
   });
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Mesmo se falhar, limpar tokens locais
+    }
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     queryClient.clear();
     router.push('/auth/login');
   };

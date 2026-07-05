@@ -24,7 +24,15 @@ export default function ProjectPageClient() {
   const project = projects.find((p) => p.id === projectId);
 
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
-  const { tasks, isLoading, create, update, remove } = useTasks(projectId, statusFilter || undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  const { tasks, meta, isLoading, create, update, remove } = useTasks(
+    projectId,
+    statusFilter || undefined,
+    currentPage,
+    ITEMS_PER_PAGE,
+  );
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
@@ -142,6 +150,11 @@ export default function ProjectPageClient() {
     );
   };
 
+  const handleFilterChange = (value: TaskStatus | '') => {
+    setStatusFilter(value);
+    setCurrentPage(1); // Reset para página 1 ao mudar filtro
+  };
+
   const filters: { label: string; value: TaskStatus | '' }[] = [
     { label: 'Todas', value: '' },
     { label: 'Pendente', value: 'pendente' },
@@ -214,7 +227,7 @@ export default function ProjectPageClient() {
               return (
                 <button
                   key={f.value}
-                  onClick={() => setStatusFilter(f.value)}
+                  onClick={() => handleFilterChange(f.value)}
                   style={{
                     height: '34px',
                     padding: '0 18px',
@@ -364,209 +377,345 @@ export default function ProjectPageClient() {
             </h2>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="card"
-                style={{
-                  padding: '16px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                }}
-              >
-                {/* Status dropdown */}
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <select
-                    value={task.status}
-                    onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
-                    style={{
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      padding: '6px 28px 6px 12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      borderRadius: '16px',
-                      border: `1.5px solid ${
-                        task.status === 'concluida'
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="card"
+                  style={{
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                  }}
+                >
+                  {/* Status dropdown */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <select
+                      value={task.status}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
+                      style={{
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        padding: '6px 28px 6px 12px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        borderRadius: '16px',
+                        border: `1.5px solid ${
+                          task.status === 'concluida'
+                            ? 'var(--color-success)'
+                            : task.status === 'em_andamento'
+                            ? 'var(--color-info)'
+                            : 'var(--color-warning)'
+                        }`,
+                        background: task.status === 'concluida'
+                          ? 'var(--color-success-bg)'
+                          : task.status === 'em_andamento'
+                          ? 'var(--color-info-bg)'
+                          : 'var(--color-warning-bg)',
+                        color: task.status === 'concluida'
                           ? 'var(--color-success)'
                           : task.status === 'em_andamento'
                           ? 'var(--color-info)'
-                          : 'var(--color-warning)'
-                      }`,
-                      background: task.status === 'concluida'
-                        ? 'var(--color-success-bg)'
-                        : task.status === 'em_andamento'
-                        ? 'var(--color-info-bg)'
-                        : 'var(--color-warning-bg)',
-                      color: task.status === 'concluida'
-                        ? 'var(--color-success)'
-                        : task.status === 'em_andamento'
-                        ? 'var(--color-info)'
-                        : 'var(--color-warning)',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      minWidth: '125px',
-                      transition: 'all 0.2s ease',
-                    }}
-                    title={`Status: ${STATUS_LABELS[task.status as TaskStatus]}`}
-                  >
-                    <option value="pendente">Pendente</option>
-                    <option value="em_andamento">Em andamento</option>
-                    <option value="concluida">Concluída</option>
-                  </select>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: task.status === 'concluida'
-                        ? 'var(--color-success)'
-                        : task.status === 'em_andamento'
-                        ? 'var(--color-info)'
-                        : 'var(--color-warning)',
-                    }}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </div>
-
-                {/* Task content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2px' }}>
-                    <span
+                          : 'var(--color-warning)',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        minWidth: '125px',
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={`Status: ${STATUS_LABELS[task.status as TaskStatus]}`}
+                    >
+                      <option value="pendente">Pendente</option>
+                      <option value="em_andamento">Em andamento</option>
+                      <option value="concluida">Concluída</option>
+                    </select>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       style={{
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        color: task.status === 'concluida' ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
-                        textDecoration: task.status === 'concluida' ? 'line-through' : 'none',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: task.status === 'concluida'
+                          ? 'var(--color-success)'
+                          : task.status === 'em_andamento'
+                          ? 'var(--color-info)'
+                          : 'var(--color-warning)',
                       }}
                     >
-                      {task.title}
-                    </span>
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
                   </div>
-                  {(task.description || task.dueDate) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                      {task.description && (
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: 'var(--color-text-secondary)',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            maxWidth: '300px',
-                          }}
-                        >
-                          {task.description}
-                        </span>
-                      )}
-                      {task.dueDate && (
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: new Date(task.dueDate) < new Date() && task.status !== 'concluida'
-                              ? 'var(--color-error)'
-                              : 'var(--color-text-tertiary)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                          </svg>
-                          {new Date(task.dueDate).toLocaleDateString('pt-BR')}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                  <button
-                    onClick={() => openEdit(task)}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--color-text-tertiary)',
-                      transition: 'background 0.15s, color 0.15s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--color-primary-light)';
-                      e.currentTarget.style.color = 'var(--color-primary)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--color-text-tertiary)';
-                    }}
-                    title="Editar"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(task.id, task.title)}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--color-text-tertiary)',
-                      transition: 'background 0.15s, color 0.15s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--color-error-bg)';
-                      e.currentTarget.style.color = 'var(--color-error)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--color-text-tertiary)';
-                    }}
-                    title="Excluir"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                    </svg>
-                  </button>
+                  {/* Task content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: task.status === 'concluida' ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
+                          textDecoration: task.status === 'concluida' ? 'line-through' : 'none',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {task.title}
+                      </span>
+                    </div>
+                    {(task.description || task.dueDate) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                        {task.description && (
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              color: 'var(--color-text-secondary)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '300px',
+                            }}
+                          >
+                            {task.description}
+                          </span>
+                        )}
+                        {task.dueDate && (
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              color: new Date(task.dueDate) < new Date() && task.status !== 'concluida'
+                                ? 'var(--color-error)'
+                                : 'var(--color-text-tertiary)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <button
+                      onClick={() => openEdit(task)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-text-tertiary)',
+                        transition: 'background 0.15s, color 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--color-primary-light)';
+                        e.currentTarget.style.color = 'var(--color-primary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--color-text-tertiary)';
+                      }}
+                      title="Editar"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(task.id, task.title)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--color-text-tertiary)',
+                        transition: 'background 0.15s, color 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--color-error-bg)';
+                        e.currentTarget.style.color = 'var(--color-error)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--color-text-tertiary)';
+                      }}
+                      title="Excluir"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Paginação */}
+            {meta.totalPages > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginTop: '24px',
+                  padding: '16px 0',
+                }}
+              >
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface)',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: currentPage === 1 ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Primeira página"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="11 17 6 12 11 7" />
+                    <polyline points="18 17 13 12 18 7" />
+                  </svg>
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface)',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: currentPage === 1 ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Página anterior"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'var(--color-text-secondary)',
+                    padding: '0 12px',
+                    minWidth: '120px',
+                    textAlign: 'center',
+                  }}
+                >
+                  Página {meta.currentPage} de {meta.totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(meta.totalPages, p + 1))}
+                  disabled={currentPage === meta.totalPages}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface)',
+                    cursor: currentPage === meta.totalPages ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: currentPage === meta.totalPages ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                    opacity: currentPage === meta.totalPages ? 0.5 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Próxima página"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage(meta.totalPages)}
+                  disabled={currentPage === meta.totalPages}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface)',
+                    cursor: currentPage === meta.totalPages ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: currentPage === meta.totalPages ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                    opacity: currentPage === meta.totalPages ? 0.5 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Última página"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="13 17 18 12 13 7" />
+                    <polyline points="6 17 11 12 6 7" />
+                  </svg>
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Total info */}
+            {meta.totalItems > 0 && (
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
+                  {meta.totalItems} {meta.totalItems === 1 ? 'tarefa' : 'tarefas'} no total
+                </span>
+              </div>
+            )}
+          </>
         )}
       </main>
 

@@ -5,6 +5,18 @@ export interface ApiResponse<T> {
   error: { fields: string[] } | null;
 }
 
+export interface PaginationMeta {
+  totalItems: number;
+  itemsPerPage: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
 export interface User {
   id: string;
   name: string;

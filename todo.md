@@ -38,3 +38,16 @@
 - [x] Fix: Login still not redirecting to home after successful login (invalidate auth.me cache)
 - [x] Fix: Surface/card color should be white (light), only background is dark
 - [x] Fix: Infinite loading spinner on Home page (removed isFetching from loading state)
+- [x] Backend: Refresh Token - generate refresh token on login, store hashed in DB
+- [x] Backend: POST /auth/refresh endpoint with token rotation
+- [x] Backend: POST /auth/logout endpoint to invalidate refresh token
+- [x] Backend: Migration to add refresh_token column to users table
+- [x] Backend: JWT Refresh Strategy (passport-jwt) for refresh token validation
+- [x] Frontend: Auto-refresh access token on 401 response (Axios interceptor)
+- [x] Frontend: Store refresh_token in localStorage alongside access_token
+- [x] Frontend: Logout calls backend to invalidate refresh token
+- [x] Backend: Pagination on GET /projects/:id/tasks (page, limit query params)
+- [x] Backend: Return paginated response with meta (totalItems, itemsPerPage, currentPage, totalPages)
+- [x] Frontend: Pagination controls on task list (first, prev, next, last)
+- [x] Frontend: Reset to page 1 when changing status filter
+- [x] Frontend: Display total items count

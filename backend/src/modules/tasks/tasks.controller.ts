@@ -36,8 +36,19 @@ export class TasksController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @CurrentUser() user: { id: string },
     @Query('status') status?: TaskStatus,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.tasksService.findAllByProject(projectId, user.id, status);
+    const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const limitNumber = limit ? Math.min(100, Math.max(1, parseInt(limit, 10))) : 10;
+
+    return this.tasksService.findAllByProject(
+      projectId,
+      user.id,
+      status,
+      pageNumber,
+      limitNumber,
+    );
   }
 
   @Get(':id')

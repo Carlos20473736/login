@@ -6,6 +6,16 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ProjectsService } from '../projects/projects.service';
 
+export interface PaginatedResult<T> {
+  items: T[];
+  meta: {
+    totalItems: number;
+    itemsPerPage: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+
 @Injectable()
 export class TasksService {
   constructor(
@@ -33,7 +43,9 @@ export class TasksService {
     projectId: string,
     userId: string,
     status?: TaskStatus,
-  ): Promise<Task[]> {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<Task>> {
     // Verifica se o projeto pertence ao usuário
     await this.projectsService.findOneByUser(projectId, userId);
 
@@ -42,10 +54,24 @@ export class TasksService {
       where.status = status;
     }
 
-    return this.tasksRepository.find({
+    const [items, totalItems] = await this.tasksRepository.findAndCount({
       where,
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemsPerPage: limit,
+        currentPage: page,
+        totalPages,
+      },
+    };
   }
 
   async findOne(

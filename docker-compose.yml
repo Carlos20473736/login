@@ -28,7 +28,8 @@ services:
       DB_PASSWORD: minitracker123
       DB_DATABASE: minitracker
       JWT_SECRET: minha-chave-secreta-dev
-      JWT_EXPIRES_IN: 1h
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_SECRET: minha-chave-refresh-secreta-dev
       APP_PORT: 3000
     depends_on:
       postgres:

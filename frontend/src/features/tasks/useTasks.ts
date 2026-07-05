@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api/client';
-import { ApiResponse, Task, TaskStatus } from '@/features/types';
+import { ApiResponse, Task, TaskStatus, PaginatedResponse } from '@/features/types';
 
 interface CreateTaskData {
   title: string;
@@ -18,22 +18,35 @@ interface UpdateTaskData {
   dueDate?: string;
 }
 
-export function useTasks(projectId: string, statusFilter?: TaskStatus) {
+export function useTasks(
+  projectId: string,
+  statusFilter?: TaskStatus,
+  page: number = 1,
+  limit: number = 10,
+) {
   const queryClient = useQueryClient();
 
-  const queryKey = ['tasks', projectId, statusFilter || 'all'];
+  const queryKey = ['tasks', projectId, statusFilter || 'all', page, limit];
 
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const params = statusFilter ? `?status=${statusFilter}` : '';
-      const { data } = await api.get<ApiResponse<Task[]>>(
-        `/projects/${projectId}/tasks${params}`,
+      const params = new URLSearchParams();
+      if (statusFilter) params.set('status', statusFilter);
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+
+      const queryString = params.toString();
+      const { data } = await api.get<ApiResponse<PaginatedResponse<Task>>>(
+        `/projects/${projectId}/tasks?${queryString}`,
       );
       return data.data;
     },
     enabled: !!projectId,
   });
+
+  const tasks = data?.items || [];
+  const meta = data?.meta || { totalItems: 0, itemsPerPage: limit, currentPage: 1, totalPages: 1 };
 
   const createMutation = useMutation({
     mutationFn: async (taskData: CreateTaskData) => {
@@ -75,6 +88,7 @@ export function useTasks(projectId: string, statusFilter?: TaskStatus) {
 
   return {
     tasks,
+    meta,
     isLoading,
     create: createMutation,
     update: updateMutation,
