@@ -212,6 +212,12 @@ body {
   color: var(--color-success);
 }
 
+/* Select dropdown options - dark theme */
+select option {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
 /* Animations */
 @keyframes spin {
   to { transform: rotate(360deg); }

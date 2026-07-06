@@ -114,15 +114,19 @@ describe('Tasks (e2e)', () => {
   });
 
   describe('GET /projects/:projectId/tasks', () => {
-    it('deve listar todas as tarefas do projeto', () => {
+    it('deve listar todas as tarefas do projeto com paginação', () => {
       return request(app.getHttpServer())
         .get(`/projects/${projectId}/tasks`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.level).toBe('success');
-          expect(Array.isArray(res.body.data)).toBe(true);
-          expect(res.body.data.length).toBe(3);
+          expect(res.body.data).toHaveProperty('items');
+          expect(res.body.data).toHaveProperty('meta');
+          expect(Array.isArray(res.body.data.items)).toBe(true);
+          expect(res.body.data.items.length).toBe(3);
+          expect(res.body.data.meta.totalItems).toBe(3);
+          expect(res.body.data.meta.currentPage).toBe(1);
         });
     });
 
@@ -132,8 +136,8 @@ describe('Tasks (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.data.length).toBe(1);
-          expect(res.body.data[0].status).toBe('pendente');
+          expect(res.body.data.items.length).toBe(1);
+          expect(res.body.data.items[0].status).toBe('pendente');
         });
     });
 
@@ -143,8 +147,8 @@ describe('Tasks (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.data.length).toBe(1);
-          expect(res.body.data[0].status).toBe('em_andamento');
+          expect(res.body.data.items.length).toBe(1);
+          expect(res.body.data.items[0].status).toBe('em_andamento');
         });
     });
 
@@ -154,8 +158,20 @@ describe('Tasks (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.data.length).toBe(1);
-          expect(res.body.data[0].status).toBe('concluida');
+          expect(res.body.data.items.length).toBe(1);
+          expect(res.body.data.items[0].status).toBe('concluida');
+        });
+    });
+
+    it('deve respeitar paginação com page e limit', () => {
+      return request(app.getHttpServer())
+        .get(`/projects/${projectId}/tasks?page=1&limit=2`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.data.items.length).toBe(2);
+          expect(res.body.data.meta.itemsPerPage).toBe(2);
+          expect(res.body.data.meta.totalPages).toBe(2);
         });
     });
   });

@@ -35,8 +35,9 @@ export default function DashboardPage() {
           setShowForm(false);
           setToast({ message: 'Projeto criado com sucesso!', type: 'success' });
         },
-        onError: (error: any) => {
-          const msg = error?.response?.data?.message || 'Erro ao criar projeto';
+        onError: (error: unknown) => {
+          const err = error as { response?: { data?: { message?: string } } };
+          const msg = err?.response?.data?.message || 'Erro ao criar projeto';
           setToast({ message: msg, type: 'error' });
         },
       },
@@ -56,8 +57,9 @@ export default function DashboardPage() {
       onSuccess: () => {
         setToast({ message: 'Projeto excluído com sucesso!', type: 'success' });
       },
-      onError: (error: any) => {
-        const msg = error?.response?.data?.message || 'Erro ao excluir projeto';
+      onError: (error: unknown) => {
+        const err = error as { response?: { data?: { message?: string } } };
+        const msg = err?.response?.data?.message || 'Erro ao excluir projeto';
         setToast({ message: msg, type: 'error' });
       },
     });

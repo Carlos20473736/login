@@ -6,6 +6,7 @@ import { Header } from '@/components/ui/Header';
 import { Toast } from '@/components/ui/Toast';
 import { useProjects } from '@/features/projects';
 import { useTasks } from '@/features/tasks';
+import { Task } from '@/features/types';
 
 type TaskStatus = 'pendente' | 'em_andamento' | 'concluida';
 
@@ -35,7 +36,7 @@ export default function ProjectPageClient() {
   );
 
   const [showForm, setShowForm] = useState(false);
-  const [editingTask, setEditingTask] = useState<any>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -61,7 +62,7 @@ export default function ProjectPageClient() {
     setShowForm(false);
   };
 
-  const openEdit = (task: any) => {
+  const openEdit = (task: Task) => {
     setEditingTask(task);
     setTitle(task.title);
     setDescription(task.description || '');
@@ -87,8 +88,9 @@ export default function ProjectPageClient() {
             resetForm();
             setToast({ message: 'Tarefa atualizada!', type: 'success' });
           },
-          onError: (error: any) => {
-            setToast({ message: error?.response?.data?.message || 'Erro ao atualizar', type: 'error' });
+          onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } } };
+            setToast({ message: err?.response?.data?.message || 'Erro ao atualizar', type: 'error' });
           },
         },
       );
@@ -98,8 +100,9 @@ export default function ProjectPageClient() {
           resetForm();
           setToast({ message: 'Tarefa criada!', type: 'success' });
         },
-        onError: (error: any) => {
-          setToast({ message: error?.response?.data?.message || 'Erro ao criar tarefa', type: 'error' });
+        onError: (error: unknown) => {
+          const err = error as { response?: { data?: { message?: string } } };
+          setToast({ message: err?.response?.data?.message || 'Erro ao criar tarefa', type: 'error' });
         },
       });
     }
@@ -116,8 +119,9 @@ export default function ProjectPageClient() {
   const executeDelete = (id: string) => {
     remove.mutate(id, {
       onSuccess: () => setToast({ message: 'Tarefa excluída!', type: 'success' }),
-      onError: (error: any) => {
-        setToast({ message: error?.response?.data?.message || 'Erro ao excluir', type: 'error' });
+      onError: (error: unknown) => {
+        const err = error as { response?: { data?: { message?: string } } };
+        setToast({ message: err?.response?.data?.message || 'Erro ao excluir', type: 'error' });
       },
     });
   };
@@ -143,8 +147,9 @@ export default function ProjectPageClient() {
       { id: taskId, status: newStatus },
       {
         onSuccess: () => setToast({ message: `Status atualizado para "${STATUS_LABELS[newStatus]}"`, type: 'success' }),
-        onError: (error: any) => {
-          setToast({ message: error?.response?.data?.message || 'Erro ao atualizar status', type: 'error' });
+        onError: (error: unknown) => {
+          const err = error as { response?: { data?: { message?: string } } };
+          setToast({ message: err?.response?.data?.message || 'Erro ao atualizar status', type: 'error' });
         },
       },
     );

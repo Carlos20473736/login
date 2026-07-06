@@ -82,15 +82,16 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string, email: string) {
-    const payload = { sub: userId, email };
+    const payload: Record<string, string> = { sub: userId, email };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_SECRET', 'default-secret'),
       expiresIn: '15m',
     });
 
+    const refreshPayload: Record<string, string> = { sub: userId, email, type: 'refresh' };
     const refreshToken = this.jwtService.sign(
-      { sub: userId, email, type: 'refresh' } as any,
+      refreshPayload,
       {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
         expiresIn: '7d',

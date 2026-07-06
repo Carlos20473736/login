@@ -27,8 +27,9 @@ function LoginForm() {
     login.mutate(
       { email, password },
       {
-        onError: (err: any) => {
-          setError(err?.response?.data?.message || 'E-mail ou senha incorretos');
+        onError: (err: unknown) => {
+          const error = err as { response?: { data?: { message?: string } } };
+          setError(error?.response?.data?.message || 'E-mail ou senha incorretos');
         },
       },
     );

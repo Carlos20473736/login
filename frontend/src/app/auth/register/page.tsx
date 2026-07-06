@@ -31,8 +31,9 @@ export default function RegisterPage() {
     register.mutate(
       { name, email, password },
       {
-        onError: (err: any) => {
-          const msg = err?.response?.data?.message;
+        onError: (err: unknown) => {
+          const error = err as { response?: { data?: { message?: string | string[] } } };
+          const msg = error?.response?.data?.message;
           setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Erro ao criar conta. Tente novamente.');
         },
       },

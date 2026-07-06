@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Task, TaskStatus } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -49,7 +49,7 @@ export class TasksService {
     // Verifica se o projeto pertence ao usuário
     await this.projectsService.findOneByUser(projectId, userId);
 
-    const where: Record<string, any> = { projectId };
+    const where: FindOptionsWhere<Task> = { projectId };
     if (status) {
       where.status = status;
     }
